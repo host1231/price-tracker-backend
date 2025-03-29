@@ -89,7 +89,7 @@ app.get('/api/auth/me', authProtect, async (req, res) => {
     }
 });
 
-app.post('/api/transactions/add', authProtect, async (req, res) => {
+app.post('/api/transactions/add', async (req, res) => {
     const {userId, title, type, date, amount} = req.body;
 
     if (!title || !type || !date || !amount) {
@@ -112,7 +112,7 @@ app.post('/api/transactions/add', authProtect, async (req, res) => {
     }
 });
 
-app.get('/api/transactions/get', authProtect, async (req, res) => {
+app.get('/api/transactions/get', async (req, res) => {
     const {userId} = req.body;
 
     if (!userId) {
@@ -127,7 +127,7 @@ app.get('/api/transactions/get', authProtect, async (req, res) => {
     }
 });
 
-app.delete('/api/transactions/delete/:id', authProtect, async (req, res) => {
+app.delete('/api/transactions/delete/:id', async (req, res) => {
     const { id } = req.params;
     
     try {
