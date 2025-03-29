@@ -113,8 +113,14 @@ app.post('/api/transactions/add', authProtect, async (req, res) => {
 });
 
 app.get('/api/transactions/get', authProtect, async (req, res) => {
+    const {userId} = req.body;
+
+    if (!userId) {
+        return res.status(400).json({ message: 'Все поля обязательны!' });
+    }
+
     try {
-        const transactions = await Transaction.find().sort({createdAt: -1});
+        const transactions = await Transaction.find({userId}).sort({createdAt: -1});
         return res.status(200).json(transactions);
     } catch (error) {
         return res.status(500).json({ message: 'Server Error!' });
