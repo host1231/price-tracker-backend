@@ -19,20 +19,24 @@ app.post('/api/auth/register', async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-        return res.status(400).json({ message: 'Все поля обязательны!' });
+        return res.status(400).json({ message: 'Bütün sahələr vacibdir!' });
     }
 
     try {
+        const user = await User.findOne({email});
+        if (user) {
+            return res.status(400).json({message: 'Bu e-poçt məşğuldur!'});
+        }
         const passwordHash = await bcrypt.hash(password, 10);
-        const newUser = await User.create({
+        await User.create({
             name,
             email,
             password: passwordHash
         });
-        return res.status(201).json({ message: 'Пользователь успешно создан!' });
+        return res.status(201).json({ message: 'Hesab uğurla yaradıldı!' });
     } catch (error) {
         // console.error(error);
-        return res.status(500).json({ message: 'Server Error' });
+        return res.status(500).json({ message: 'Qeydiyyat xətası!' });
     }
 });
 
@@ -40,20 +44,20 @@ app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ message: 'Все поля обязательны!' });
+        return res.status(400).json({ message: 'Bütün sahələr vacibdir!' });
     }
 
     try {
         const user = await User.findOne({ email });
 
         if (!user) {
-            return res.status(400).json({ message: 'Неверный логин или пароль!' });
+            return res.status(400).json({ message: 'Səhv e-poçt və ya parol!' });
         }
 
         const comparePassword = await bcrypt.compare(password, user.password);
 
         if (!comparePassword) {
-            return res.status(400).json({ message: 'Неверный логин или пароль!' });
+            return res.status(400).json({ message: 'Səhv e-poçt və ya parol!' });
         }
 
         const token = jwt.sign(
@@ -72,7 +76,7 @@ app.post('/api/auth/login', async (req, res) => {
         });
     } catch (error) {
         // console.error(error);
-        return res.status(500).json({ message: 'Server Error!' });
+        return res.status(500).json({ message: 'Hesaba giriş xətası!' });
     }
 });
 
@@ -80,7 +84,7 @@ app.get('/api/auth/me', authProtect, async (req, res) => {
     try {
         const user = await User.findById(req.userId)?.select('-password');
         if (!user) {
-            return res.status(404).json({message: 'Пользователь не найден!'});
+            return res.status(404).json({message: 'Hesab tapılmadı!'});
         }
         return res.status(200).json(user);
     } catch (error) {
@@ -93,11 +97,11 @@ app.post('/api/transactions/add', authProtect, async (req, res) => {
     const {userId, title, type, date, amount} = req.body;
 
     if (!title || !type || !date || !amount) {
-        return res.status(400).json({ message: 'Все поля обязательны!' });
+        return res.status(400).json({ message: 'Bütün sahələr vacibdir!' });
     } 
 
     try {
-        const newTransaction = await Transaction.create({
+        await Transaction.create({
             userId,
             title,
             type,
@@ -105,24 +109,19 @@ app.post('/api/transactions/add', authProtect, async (req, res) => {
             amount
         });
 
-        return res.status(200).json(newTransaction);
+        return res.status(200).json({message: 'Ödəniş əlavə edildi!'});
     } catch (error) {
         // console.error(error)
-        return res.status(500).json({ message: 'Server Error!' });
+        return res.status(500).json({ message: 'Ödəniş əlavə edilmədi!' });
     }
 });
 
 app.get('/api/transactions/get', authProtect, async (req, res) => {
-    const {userId} = req.body;
-
-    if (!userId) {
-        return res.status(400).json({ message: 'Все поля обязательны!' });
-    }
-
     try {
-        const transactions = await Transaction.find({userId}).sort({createdAt: -1});
+        const transactions = await Transaction.find({userId: req.userId}).sort({createdAt: -1});
         return res.status(200).json(transactions);
     } catch (error) {
+        // console.error(error)
         return res.status(500).json({ message: 'Server Error!' });
     }
 });
@@ -133,11 +132,12 @@ app.delete('/api/transactions/delete/:id', authProtect, async (req, res) => {
     try {
         const transaction = await Transaction.findByIdAndDelete(id);
         if (!transaction) {
-            return res.status(400).json({message: 'Transaction not found!'});
+            return res.status(400).json({message: 'Ödəniş tapılmadı!'});
         }
-        return res.status(200).json({message: 'Transaction deleted!'});
+        return res.status(200).json({message: 'Ödəniş uğurla silindi!'});
     } catch (error) {
-        return res.status(500).json({ message: 'Server Error!' });
+        // console.error(error)
+        return res.status(500).json({ message: 'Ödəniş silinməyib!' });
     }
 });
 
